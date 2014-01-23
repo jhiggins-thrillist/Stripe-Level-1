@@ -2,7 +2,7 @@
 
 set -eu
 
-if [ "$#" != 2 ]; then
+if [ "$#" != 3 ]; then
     echo >&2 "Usage: $0 <clone_url> <public_username>
 
 A VERY SLOW mining implementation. This should give you an idea of
@@ -21,6 +21,7 @@ fi
 
 export clone_spec=$1
 export public_username=$2
+export git=$3
 
 prepare_index() {
     perl -i -pe 's/($ENV{public_username}: )(\d+)/$1 . ($2+1)/e' LEDGER.txt
@@ -43,21 +44,20 @@ solve() {
     counter=0
 
     while let counter=counter+1; do
-	echo -n .
+    echo -n .
 
-	body="tree $tree
+    #git hash-object -t commit --stdin <<< $(git cat-file -p `echo $counter | git commit-tree $(git write-tree) -p $(git rev-parse HEAD)`)
+
+	#body=$(git cat-file -p `echo $counter | git commit-tree $(git write-tree) -p $(git rev-parse HEAD)`)
+    body="tree $tree
 parent $parent
-author CTF user <me@example.com> $timestamp +0000
-committer CTF user <me@example.com> $timestamp +0000
-
-Give me a Gitcoin
-
+author CTF user <me@example.com> $RANDOM +0000
+committer CTF user <me@example.com> $RANDOM +0000
 $counter"
 
 	# See http://git-scm.com/book/en/Git-Internals-Git-Objects for
 	# details on Git objects.
 	sha1=$(git hash-object -t commit --stdin <<< "$body")
-
 	if [ "$sha1" "<" "$difficulty" ]; then
 	    echo
 	    echo "Mined a Gitcoin with commit: $sha1"
@@ -74,14 +74,32 @@ reset() {
 }
 
 # Set up repo
-local_path=./${clone_spec##*:}
+#local_path=/tmp/$RANDOM
+local_path=./
+#mkdir -p $local_path
+#echo "Cloning repository to $local_path"
+#cd "$local_path"
+#git clone lvl1-rwd4yw3p@stripe-ctf.com:level1 $local_path
+
+
+# if [ -d "$local_path" ]; then
+#     echo "Using existing repository at $local_path"
+#     cd "$local_path"
+# else
+#     echo "Cloning repository to $local_path"
+#     git clone "$clone_spec" "$local_path"
+#     cd "$local_path"
+# fi
+
+local_path="./$RANDOM"
+echo $local_path
 
 if [ -d "$local_path" ]; then
     echo "Using existing repository at $local_path"
     cd "$local_path"
 else
     echo "Cloning repository to $local_path"
-    git clone "$clone_spec" "$local_path"
+    git clone "$git" "$local_path"
     cd "$local_path"
 fi
 
