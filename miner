@@ -44,7 +44,6 @@ solve() {
     counter=0
 
     while let counter=counter+1; do
-    echo -n .
 
     #git hash-object -t commit --stdin <<< $(git cat-file -p `echo $counter | git commit-tree $(git write-tree) -p $(git rev-parse HEAD)`)
 
